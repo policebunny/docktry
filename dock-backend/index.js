@@ -33,10 +33,11 @@ app.use(log);
 
 
 //Endpoints
-app.get("/profs", function (req, res) {
+app.get("/profs", async function (req, res) {
 
     res.writeHead(200, { "Content-Type": "application/json", });
-    data = getprofs();
+    data = await getprofs();
+    console.log(data);
     res.end(JSON.stringify(data));
 
 });
@@ -52,11 +53,11 @@ async function getprofs() {
     return db;
 }
 
-app.get("/profs/:id", function (req, res) {
+app.get("/profs/:id",async function (req, res) {
 
     res.writeHead(200, { "Content-Type": "application/json", });
     //maybe JSON.stringify nachher raus ??
-    res.end(JSON.stringify(getprofbyid(req.params.id)));
+    res.end(JSON.stringify(await getprofbyid(req.params.id)));
 
 });
 
@@ -73,29 +74,20 @@ async function getprofbyid(id) {
 
 }
 
-app.put("/profs/:id", function (req, res) {
+app.put("/profs/:id",async function (req, res) {
     console.log("hier in put vorlage");
     let a = {
         // c:    
     };
-    a.id = countid();           //hier böse ?
+    a.id = req.body.id;           //hier böse ?
     a.name = req.body.name;
     a.rating = req.body.rating;
     res.writeHead(200, {
         "Content-Type": "application/json",
     });
-    res.end(JSON.stringify(putprofbyid(a)));
+    res.end(JSON.stringify(await putprofbyid(a)));
 });
 //update prof
-async function countid () {
-    console.log("hier in async countid");
-
-    await client.connect();
-
-    const db = await client.db(`profdb`).collection('profs').countDocuments({}); //not done
-    console.log(JSON.stringify(db));
-    return db + 1;
-}
 
 async function putprofbyid(prof) {
     console.log("hier in async putprofbyid");
@@ -105,18 +97,17 @@ async function putprofbyid(prof) {
     let options = { upsert: true, new: true };
     const db = await client.db(`profdb`).collection('profs').updateOne(query, update, options); //not done
     console.log(JSON.stringify(db));
-    return getprofs();
+    return await getprofs();
 
 }
 
-app.delete("/profs/:id", function (req, res) {
-
-    let dataAsObject = JSON.parse(data);
+app.delete("/profs/:id",async function (req, res) {
 
     res.writeHead(200, {
         "Content-Type": "application/json",
     })
-    res.end(JSON.stringify(deletById(req.params.id)));
+    console.log(req.params.id);
+    res.end(JSON.stringify(await deletById(req.params.id)));
 
 
 });
@@ -125,15 +116,15 @@ async function deletById(id) {
     await client.connect();
     let req = {}
     req.id = id
-    const db = await client.db(`profdb`).collection('profs').deleteOne(req)
+    // { "_id" : ObjectId("563237a41a4d68582c2509da") }
+    const db = await client.db(`profdb`).collection('profs').deleteOne({ "id" : req.id });
     console.log(JSON.stringify(db));
-    return getprofs();
+    return await getprofs();
 }
 
-app.post("/profs", function (req, res) {
+app.post("/profs",async function (req, res) {
 
     let prof = {}
-    //prof.id = req.body.id;
     prof.name = req.body.name;
     prof.rating= req.body.rating;
 
@@ -142,17 +133,33 @@ app.post("/profs", function (req, res) {
         "Content-Type": "application/json",
     });
 
-    res.end(JSON.stringify(postProf(prof)));
+    res.end(JSON.stringify(await postProf(prof)));
 });
+
+async function countid () {
+    console.log("hier in async countid");
+
+    await client.connect();
+
+    const db = await client.db(`profdb`).collection('profs').countDocuments(); //not done
+    console.log(db)
+    console.log(db + 1);
+    return db + 1;
+}
 
 async function postProf(prof) {
     await client.connect();
+    prof.id = await countid();
+    console.log("in postprof");
+    console.log(prof.id);
+    console.log(prof);
+    
     let query = { id: prof.id };
-    let update = { $set: prof.name, $set: prof.rating };
+    let update = { $set: {id: prof.id, name: prof.name, rating: prof.rating} };
     let options = { upsert: true, new: true };
     const db = await client.db(`profdb`).collection('profs').updateOne(query, update, options); //not done
     console.log(JSON.stringify(db));
-    return getprofs();
+    return await getprofs();
 
 }
 
