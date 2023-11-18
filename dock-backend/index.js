@@ -92,9 +92,9 @@ app.put("/profs/:id",async function (req, res) {
 async function putprofbyid(prof) {
     console.log("hier in async putprofbyid");
     await client.connect();
-    let query = { name: prof.id };
-    let update = { $set: prof.name, $set: prof.rating };
-    let options = { upsert: true, new: true };
+    let query = { id: parseInt(prof.id) };
+    let update = { $set: {name: prof.name}, $set: {rating: prof.rating} };
+    let options = { upsert: false, new: false };
     const db = await client.db(`profdb`).collection('profs').updateOne(query, update, options); //not done
     console.log(JSON.stringify(db));
     return await getprofs();
@@ -115,9 +115,14 @@ app.delete("/profs/:id",async function (req, res) {
 async function deletById(id) {
     await client.connect();
     let req = {}
-    req.id = id
+    req.id = id;
+    console.log(id);
     // { "_id" : ObjectId("563237a41a4d68582c2509da") }
-    const db = await client.db(`profdb`).collection('profs').deleteOne({ "id" : req.id });
+    //const bd = await client.db(`profdb`).collection('profs').findOne({id: parseInt(id)});
+    const db = await client.db(`profdb`).collection('profs').deleteMany({ id: parseInt(req.id) });
+
+
+    console.log(id);
     console.log(JSON.stringify(db));
     return await getprofs();
 }
@@ -144,6 +149,7 @@ async function countid () {
     const db = await client.db(`profdb`).collection('profs').countDocuments(); //not done
     console.log(db)
     console.log(db + 1);
+    //return db + Math.floor(Math.random() * 10000);   //böse?
     return db + 1;
 }
 
