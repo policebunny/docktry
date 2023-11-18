@@ -42,6 +42,7 @@ app.get("/profs", function (req, res) {
 });
 
 async function getprofs() {
+    await client.connect();
     const prof = {
         //category: "gear-surf-surfboards" 
     };
@@ -60,6 +61,7 @@ app.get("/profs/:id", function (req, res) {
 });
 
 async function getprofbyid(id) {
+    await client.connect();
     let prof = {
         //category: "gear-surf-surfboards" 
     };
@@ -85,51 +87,60 @@ app.put("/profs/:id", function (req, res) {
 });
 //update prof
 async function putprofbyid(prof) {
-
-    query = { name: prof.id };
-    update = { $set: prof.name, $set: prof.rating };
-    options = { upsert: true, new: true };
-    const db = await client.db(`profdb`).collection('profs'); //not done
+    await client.connect();
+    let query = { name: prof.id };
+    let update = { $set: prof.name, $set: prof.rating };
+    let options = { upsert: true, new: true };
+    const db = await client.db(`profdb`).collection('profs').updateOne(query, update, options); //not done
     Console.log(JSON.stringify(db));
     return getprofs();
 
 }
 
 app.delete("/profs/:id", function (req, res) {
-    fs.readFile(filename, "utf8", function (err, data) {
-        let dataAsObject = JSON.parse(data);
-        dataAsObject.splice(req.params.id, 1);
-        fs.writeFile(filename, JSON.stringify(dataAsObject), () => {
-            res.writeHead(200, {
-                "Content-Type": "application/json",
-            });
-            res.end(JSON.stringify(dataAsObject));
-        });
-    });
+
+    let dataAsObject = JSON.parse(data);
+
+    res.writeHead(200, {
+        "Content-Type": "application/json",
+    })
+    res.end(JSON.stringify(deletById(req.params.id)));
+
+
 });
 
-async function a() {
-
+async function deletById(id) {
+    await client.connect();
+    let req = {}
+    req.id = id
+    const db = await client.db(`profdb`).collection('profs').deleteOne(req)
+    Console.log(JSON.stringify(db));
+    return getprofs();
 }
 
 app.post("/profs", function (req, res) {
-    fs.readFile(filename, "utf8", function (err, data) {
-        let dataAsObject = JSON.parse(data);
-        dataAsObject.push({
-            id: dataAsObject.length,
-            name: req.body.name,
-            rating: req.body.rating,
-        });
-        fs.writeFile(filename, JSON.stringify(dataAsObject), () => {
-            res.writeHead(200, {
-                "Content-Type": "application/json",
-            });
-            res.end(JSON.stringify(dataAsObject));
-        });
+
+    let prof = {}
+    prof.id = new ObjectId(prof)
+    prof.name = req.body.name;
+    prof.rating= req.body.rating;
+
+
+    res.writeHead(200, {
+        "Content-Type": "application/json",
     });
+
+    res.end(JSON.stringify(postProf(prof)));
 });
 
-async function a() {
+async function postProf(prof) {
+    await client.connect();
+    let query = { name: prof.id };
+    let update = { $set: prof.name, $set: prof.rating };
+    let options = { upsert: true, new: true };
+    const db = await client.db(`profdb`).collection('profs').updateOne(query, update, options); //not done
+    Console.log(JSON.stringify(db));
+    return getprofs();
 
 }
 
