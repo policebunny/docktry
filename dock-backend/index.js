@@ -149,8 +149,8 @@ async function countid () {
     const db = await client.db(`profdb`).collection('profs').countDocuments(); //not done
     console.log(db)
     console.log(db + 1);
-    return db + Math.floor(Math.random() * 10000);   
-    //return db + 1;
+    // return db + Math.floor(Math.random() * 10000);   
+    return db + 1;
 }
 
 async function postProf(prof) {
