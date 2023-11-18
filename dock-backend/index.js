@@ -48,7 +48,7 @@ async function getprofs() {
     };
 
     const db = await client.db(`profdb`).collection('profs').find(prof).toArray();
-    Console.log(JSON.stringify(db));
+    console.log(JSON.stringify(db));
     return db;
 }
 
@@ -68,16 +68,17 @@ async function getprofbyid(id) {
     prof.id = id;
 
     const db = await client.db(`profdb`).collection('profs').findOne(prof).toArray();
-    Console.log(JSON.stringify(db));
+    console.log(JSON.stringify(db));
     return db;
 
 }
 
 app.put("/profs/:id", function (req, res) {
+    console.log("hier in put vorlage");
     let a = {
         // c:    
     };
-    a.id = req.params.id;
+    a.id = countid();           //hier böse ?
     a.name = req.body.name;
     a.rating = req.body.rating;
     res.writeHead(200, {
@@ -86,13 +87,24 @@ app.put("/profs/:id", function (req, res) {
     res.end(JSON.stringify(putprofbyid(a)));
 });
 //update prof
+async function countid () {
+    console.log("hier in async countid");
+
+    await client.connect();
+
+    const db = await client.db(`profdb`).collection('profs').countDocuments({}); //not done
+    console.log(JSON.stringify(db));
+    return db + 1;
+}
+
 async function putprofbyid(prof) {
+    console.log("hier in async putprofbyid");
     await client.connect();
     let query = { name: prof.id };
     let update = { $set: prof.name, $set: prof.rating };
     let options = { upsert: true, new: true };
     const db = await client.db(`profdb`).collection('profs').updateOne(query, update, options); //not done
-    Console.log(JSON.stringify(db));
+    console.log(JSON.stringify(db));
     return getprofs();
 
 }
@@ -114,14 +126,14 @@ async function deletById(id) {
     let req = {}
     req.id = id
     const db = await client.db(`profdb`).collection('profs').deleteOne(req)
-    Console.log(JSON.stringify(db));
+    console.log(JSON.stringify(db));
     return getprofs();
 }
 
 app.post("/profs", function (req, res) {
 
     let prof = {}
-    prof.id = new ObjectId(prof)
+    //prof.id = req.body.id;
     prof.name = req.body.name;
     prof.rating= req.body.rating;
 
@@ -135,11 +147,11 @@ app.post("/profs", function (req, res) {
 
 async function postProf(prof) {
     await client.connect();
-    let query = { name: prof.id };
+    let query = { id: prof.id };
     let update = { $set: prof.name, $set: prof.rating };
     let options = { upsert: true, new: true };
     const db = await client.db(`profdb`).collection('profs').updateOne(query, update, options); //not done
-    Console.log(JSON.stringify(db));
+    console.log(JSON.stringify(db));
     return getprofs();
 
 }
